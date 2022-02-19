@@ -1,9 +1,7 @@
 import express from "express";
 import UserRouter from "./router/userRouter";
 import TaskRouter from "./router/taskRouter";
-import bcrypt from "bcryptjs"
 require("./db/mongoose");
-
 
 const app = express();
 const port = process.env.PORT || 5000;
