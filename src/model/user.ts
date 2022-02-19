@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs"
+import jwt from 'jsonwebtoken'
 
 const validator = require('validator');
 const mongoose = require('mongoose');
@@ -36,8 +37,32 @@ const UserSchema = new mongoose.Schema({
         trim: true,
         lowerCase: true,
         minlength: 7
-    }
+    },
+    tokens: [{
+        token:{
+            type: String,
+            required: true
+        }
+    }]
 })
+
+UserSchema.methods.generateAuthToken = async function () {
+    const user = this
+    const token = jwt.sign({ _id: user._id.toString() }, 'HelloMonit')
+
+    user.tokens = user.tokens.concat({ token })
+    await user.save()
+
+    return token
+}
+
+UserSchema.methods.toJSON = function (){
+    const user = this;
+    const userObject = user.toObject();
+        delete userObject.password;
+        delete userObject.tokens;
+    return userObject;
+}
 
 UserSchema.statics.findByCredential = async (email, password) => {
     const user = await User.findOne({ email })
