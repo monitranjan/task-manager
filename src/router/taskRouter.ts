@@ -14,10 +14,36 @@ TaskRouter.post('/tasks', auth, async (req, res) => {
     }
 })
 
+
+//Get tasks?completed=true
+//Get tasks?limit=10&skip=20
+//Get tasks?sortby=completedAt:desc
 TaskRouter.get('/tasks', auth, async (req, res) => {
+    const match = { completed: false };
+    const sort = {}
+    if (req.query.completed) {
+        match.completed = req.query.completed === 'true'
+    }
+
+    if (req.query.sortBy) {
+        const parts = req.query.sortBy.split(':')
+        sort[parts[0]] = parts[1] === 'desc' ? -1 : 1
+    }
+
     try {
         // let tasks = await Task.find({owner:req.user._id});
-        await req.user.populate('tasks').execPopulate()
+        await req.user.populate({
+            path: 'tasks',
+            match,
+            options: {
+                limit: parseInt(req.query.limit),
+                skip: parseInt(req.query.skip),
+                sort: {
+                    createdAt: 1,
+                    completed: -1
+                }
+            }
+        }).execPopulate()
         res.send(req.user.tasks)
     } catch (e) {
         res.status(500).send(e)
